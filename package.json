@@ -1,0 +1,26 @@
+{
+  "name": "1688pic",
+  "version": "1.0.0",
+  "description": "1688商品详情图片下载",
+  "main": "app/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xinconan/1688pic.git"
+  },
+  "keywords": [
+    "1688",
+    "picture"
+  ],
+  "author": "xinconan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xinconan/1688pic/issues"
+  },
+  "homepage": "https://github.com/xinconan/1688pic#readme",
+  "devDependencies": {
+    "electron": "^2.0.0"
+  }
+}

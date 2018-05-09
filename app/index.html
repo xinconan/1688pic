@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>1688图片下载器——By xinconan</title>
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="container">
+    <form>
+      <div class="form-group row">
+        <label for="addrText" class="col-md-2 col-form-label">下载地址：</label>
+        <div class="col-md-8 input-group">
+
+          <input type="text" class="form-control" id="addrText" placeholder="请输入要下载的地址">
+          <div class="input-group-append" style="cursor: pointer;" id="btnClear">
+            <span class="input-group-text">清空</span>
+          </div>
+        </div>
+        <button id="btnClipboard" class="btn btn-primary col-md-2">粘贴地址</button>
+      </div>
+      <div class="form-group row">
+        <label for="dist" class="col-md-2 col-form-label">保存目录：</label>
+        <div class="col-md-9">
+          <input class="form-control" id="dist" readonly placeholder="请选择图片的保存目录">
+        </div>
+        <button id="btnPath" class="btn btn-primary col-md-1">选择</button>
+      </div>
+      <div class="row">
+        <div class="col-md-10">
+          <div id="errmsg" class="alert alert-danger" role="alert" style="margin-bottom: 0;display: none;">
+              A simple danger alert—check it out!
+          </div>
+        </div>
+        <button id="btnDownload" class="btn btn-primary col-md-2">开始下载</button>
+      </div>
+    </form>
+
+  </div>
+
+  <script>
+  const {clipboard,ipcRenderer,remote} = require('electron');
+  const dialog = remote.dialog;
+
+  const btnDownload = document.getElementById('btnDownload');
+  const addrText = document.getElementById('addrText');  // 下载链接
+  const dist = document.getElementById('dist');  // 存放的目录
+  const btnPath = document.getElementById('btnPath');  // 选择存放的目录
+  const btnClipboard = document.getElementById('btnClipboard');  // 粘贴板
+  const btnClear = document.getElementById('btnClear');  // 清除链接
+  const errmsg = document.getElementById('errmsg');
+  const AliReg = 'https://detail.1688.com/';
+  btnDownload.addEventListener('click', (e)=>{
+    e.preventDefault();
+    let srcLink = addrText.value;
+    let distText = dist.value;
+    if (!srcLink) {
+      showErrorMsg('请输入要下载的地址！');
+      return;
+    }
+    if (!srcLink.startsWith(AliReg)) {
+      showErrorMsg('暂时只支持1688网站商品详情页的链接');
+      return;
+    }
+    if (!distText) {
+      showErrorMsg('请选择图片的保存目录！');
+      return;
+    }
+    hideErrorMsg();
+    // 发送下载指令
+    let params = {
+      url:srcLink,
+      dist: distText
+    }
+    ipcRenderer.send('download', params);
+  })
+
+  // 选择存放的目录
+  btnPath.addEventListener('click',(e)=>{
+    e.preventDefault();
+    dialog.showOpenDialog({
+      properties:[
+        'openDirectory'
+      ]
+    }, (res)=>{
+      dist.value = res[0];
+    })
+  })
+
+  // 读取粘贴板内容
+  btnClipboard.addEventListener('click',(e)=>{
+    e.preventDefault();
+    let url = clipboard.readText();
+    if(!url || !url.startsWith(AliReg)) {
+      return;
+    }
+    addrText.value = url;
+  });
+
+  // 清空链接
+  btnClear.addEventListener('click',(e)=>{
+    e.preventDefault();
+    addrText.value = '';
+  });
+
+  // 显示错误信息
+  function showErrorMsg(msg) {
+    errmsg.innerHTML = msg;
+    errmsg.style.display = 'block';
+  }
+  function hideErrorMsg(){
+    errmsg.style.display = 'none';
+  }
+  </script>
+</body>
+</html>
