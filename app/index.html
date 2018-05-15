@@ -32,11 +32,17 @@
       <div class="row">
         <div class="col-md-10">
           <div id="errmsg" class="alert alert-danger" role="alert" style="margin-bottom: 0;display: none;">
-              A simple danger alert—check it out!
+            
           </div>
         </div>
         <button id="btnDownload" class="btn btn-primary col-md-2">开始下载</button>
       </div>
+
+      <div class="form-group">
+        <label for="logger">日志：</label>
+        <textarea class="form-control" readonly id="logger" rows="10" style="font-size:12px;"></textarea>
+      </div>
+      <button class="btn btn-primary col-md-2 offset-md-10" id="btnClearLog">清空日志</button>
     </form>
 
   </div>
@@ -51,6 +57,8 @@
   const btnPath = document.getElementById('btnPath');  // 选择存放的目录
   const btnClipboard = document.getElementById('btnClipboard');  // 粘贴板
   const btnClear = document.getElementById('btnClear');  // 清除链接
+  const btnClearLog = document.getElementById('btnClearLog');  // 清除日志
+  const logger = document.getElementById('logger'); // 日志
   const errmsg = document.getElementById('errmsg');
   const AliReg = 'https://detail.1688.com/';
   btnDownload.addEventListener('click', (e)=>{
@@ -105,6 +113,15 @@
     e.preventDefault();
     addrText.value = '';
   });
+  // 清空日志
+  btnClearLog.addEventListener('click',(e)=>{
+    e.preventDefault();
+    logger.value = '';
+  });
+
+  ipcRenderer.on('logger',(e,params)=>{
+    logger.value += params+'\n';
+  })
 
   // 显示错误信息
   function showErrorMsg(msg) {

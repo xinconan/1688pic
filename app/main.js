@@ -10,6 +10,7 @@ const {
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const parse = require('./parse');
 
 function createWindow() {
   var opt = {
@@ -82,6 +83,7 @@ ipcMain.on('download', (e, params)=>{
   // dist 下载的目录
   // url 下载的链接地址
   console.log(params)
+  parse.getImageList(params.url,params.dist,win.webContents);
 })
 
 app.on('activate', () => {

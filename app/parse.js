@@ -1,7 +1,7 @@
 const request = require('request')
 const cheerio = require('cheerio')
 let url ='https://detail.1688.com/offer/559913701941.html?spm=a2615.2177701.0.0.6b7042765fhpVW'
-
+let retryCount = 0;
 
 let option = {
   maxRedirects: 15,
@@ -16,7 +16,7 @@ let option = {
  * 获取网页的HTML
  * @param {*} url 
  */
-function getHtml(url) {
+function getHtml(url,win) {
   option.url = url;
   option.headers.referer = url;
   return new Promise((resolve,reject) => {
@@ -25,7 +25,14 @@ function getHtml(url) {
         let $ = cheerio.load(body);
         if ($('#loginchina').length) {
           // TODO: 有登录，可能存在一直重定向到登录页面，需要改造
-          getHtml(url);
+          if(retryCount<20){
+            retryCount++;
+            win.send('logger',`第${retryCount}重试请求目标网页`);
+            getHtml(url,win);
+          }else{
+            win.send('logger','重试请求目标网页达到上限值：20。终止请求');
+            reject('重定向次数过多');
+          }
         }else{
           resolve(body);
         }
@@ -42,7 +49,8 @@ function getHtml(url) {
  * 传入的url，类似：https://img.alicdn.com/tfscom/TB1cUizhgvD8KJjSsplXXaIEFXa
  * @param {*} url 
  */
-function getDetailImages(url){
+function getDetailImages(url,win){
+  win.send('logger','正在请求解析详情图地址');
   option.url = url;
   let imgList = [];
   return new Promise((resolve, reject)=>{
@@ -74,8 +82,10 @@ function getDetailImages(url){
  * 其中如果传递的参数是商品详情页，那么也会下载主图页面里的图片
  * @param {*} link 
  */
-exports.getImageList = function(link){
-  getHtml(link).then((html)=>{
+exports.getImageList = function(link,path,win){
+  retryCount = 0;
+  win.send('logger','正在请求目标网页');  
+  getHtml(link,win).then((html)=>{
     // console.log(html)
     const $ = cheerio.load(html)
     // 商品详情页
@@ -87,8 +97,8 @@ exports.getImageList = function(link){
       console.log(tfsUrl)
       if (tfsUrl) {
         // 拿到图片请求的链接，继续请求
-        getDetailImages(tfsUrl).then((imgs)=>{
-          console.log(imgs)
+        getDetailImages(tfsUrl,win).then((imgs)=>{
+          win.send('logger',imgs.toString())
         }).catch((e)=>{
           console.log(e)
         });
@@ -110,7 +120,7 @@ exports.getImageList = function(link){
     }
         
   }).catch((err)=>{
-    console.log(err)
+    win.send('logger', err);
   })
 }
 
