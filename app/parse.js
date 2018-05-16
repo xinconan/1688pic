@@ -1,6 +1,6 @@
 const request = require('request')
 const cheerio = require('cheerio')
-let url ='https://detail.1688.com/offer/559913701941.html?spm=a2615.2177701.0.0.6b7042765fhpVW'
+const {downloadImg} = require('./utils')
 let retryCount = 0;
 
 let option = {
@@ -94,15 +94,26 @@ exports.getImageList = function(link,path,win){
       // 需要从服务器获取，链接是data-tfs-url
       // <div id="desc-lazyload-container" class="desc-lazyload-container" data-url="https://laputa.1688.com/offer/ajax/OfferDesc.do" data-tfs-url="https://img.alicdn.com/tfscom/TB1cUizhgvD8KJjSsplXXaIEFXa" data-enable="true">加载中...</div>
       const tfsUrl = $("#desc-lazyload-container").attr('data-tfs-url');
-      console.log(tfsUrl)
+      // console.log(tfsUrl)
       if (tfsUrl) {
         // 拿到图片请求的链接，继续请求
         getDetailImages(tfsUrl,win).then((imgs)=>{
-          win.send('logger',imgs.toString())
+          imgs.forEach((item)=>{
+            win.send('logger', `开始下载图片 ${item}`)
+            downloadImg(item,path)
+              .then(()=>{
+                win.send('logger', `图片 ${item} 下载完成`)
+              })
+              .catch(()=>{
+                win.send('logger', `图片 ${item} 下载出错`)
+              })
+          })
         }).catch((e)=>{
+          win.send('logger', '获取详情图片出错：'+ e)
           console.log(e)
         });
       } else {
+        win.send('logger','没有获取到详情图片链接')
         console.log('没有获取到详情图片链接')
       }
 
