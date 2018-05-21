@@ -99,14 +99,7 @@ exports.getImageList = function(link,path,win){
         // 拿到图片请求的链接，继续请求
         getDetailImages(tfsUrl,win).then((imgs)=>{
           imgs.forEach((item)=>{
-            win.send('logger', `开始下载图片 ${item}`)
-            downloadImg(item,path)
-              .then(()=>{
-                win.send('logger', `图片 ${item} 下载完成`)
-              })
-              .catch(()=>{
-                win.send('logger', `图片 ${item} 下载出错`)
-              })
+            download(item, path, win);
           })
         }).catch((e)=>{
           win.send('logger', '获取详情图片出错：'+ e)
@@ -121,10 +114,12 @@ exports.getImageList = function(link,path,win){
       const mainDom = $("li.tab-trigger");
       let mainImgs = [];
       for(let i=0;i<mainDom.length;i++){
-        mainImgs[i] = JSON.parse($(mainDom[i]).attr('data-imgs')).origin;
+        mainImgs[i] = JSON.parse($(mainDom[i]).attr('data-imgs')).original;
       }
-      console.log('main....')
-      console.log(mainImgs)
+      // 下载主图
+      mainImgs.forEach((img)=>{
+        download(img, path, win);
+      });
     } else if(/detail.1688.com\/pic/.test(link)) {
       // 商品主图
       getMainImages(link);
@@ -137,4 +132,15 @@ exports.getImageList = function(link,path,win){
 
 function getMainImages(link) {
 
+}
+
+function download(url, path, win) {
+  win.send('logger', `开始下载图片 ${url}`)
+  downloadImg(url,path)
+    .then(()=>{
+      win.send('logger', `图片 ${url} 下载完成`)
+    })
+    .catch(()=>{
+      win.send('logger', `图片 ${url} 下载出错`)
+    })
 }
