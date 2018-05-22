@@ -4,6 +4,8 @@
   "description": "1688商品详情图片下载",
   "main": "app/main.js",
   "scripts": {
+    "dev": "electron --inspect .",
+    "debug": "cross-env NODE_ENV=development electron --inspect .",
     "start": "electron ."
   },
   "repository": {
@@ -21,6 +23,7 @@
   },
   "homepage": "https://github.com/xinconan/1688pic#readme",
   "devDependencies": {
+    "cross-env": "^5.1.5",
     "electron": "^2.0.0"
   },
   "dependencies": {

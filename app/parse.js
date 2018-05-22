@@ -82,11 +82,10 @@ function getDetailImages(url,win){
  * 其中如果传递的参数是商品详情页，那么也会下载主图页面里的图片
  * @param {*} link 
  */
-exports.getImageList = function(link,path,win){
+exports.getImageList = async function(link,path,win){
   retryCount = 0;
   win.send('logger','正在请求目标网页');  
   getHtml(link,win).then((html)=>{
-    // console.log(html)
     const $ = cheerio.load(html)
     // 商品详情页
     if (/detail.1688.com\/offer/.test(link)) {
@@ -117,21 +116,35 @@ exports.getImageList = function(link,path,win){
         mainImgs[i] = JSON.parse($(mainDom[i]).attr('data-imgs')).original;
       }
       // 下载主图
-      mainImgs.forEach((img)=>{
-        download(img, path, win);
+      // mainImgs.forEach((img)=>{
+      //   download(img, path, win);
+      // });
+      win.send('logger', '开始下载详情页主图');
+      downInOrder(mainImgs, path, win).then(()=>{
+        win.send('logger', '详情页主图下载完成');
       });
     } else if(/detail.1688.com\/pic/.test(link)) {
       // 商品主图
-      getMainImages(link);
+      const mainDom = $(".nav-tabs li.tab-trigger");
+      let mainImgs = [];
+      for(let i=0;i<mainDom.length;i++){
+        mainImgs[i] = $(mainDom[i]).attr('data-img');
+      }
+      win.send('logger', '开始下载主图');
+      downInOrder(mainImgs, path, win).then(()=>{
+        win.send('logger', '主图下载完成');
+      });
+      // 下载主图
+      // mainImgs.forEach((img)=>{
+      //   download(img, path, win);
+      //   });
+      // });
+
     }
         
   }).catch((err)=>{
-    win.send('logger', err);
+    win.send('logger', `请求获取HTML出错，原因：${JSON.stringify(err)}`);
   })
-}
-
-function getMainImages(link) {
-
 }
 
 function download(url, path, win) {
@@ -143,4 +156,27 @@ function download(url, path, win) {
     .catch(()=>{
       win.send('logger', `图片 ${url} 下载出错`)
     })
+}
+
+/**
+ * 并发按顺序下载图片
+ * @param {*} urls 要下载的链接数组
+ * @param {*} path 要下载到本地的地址
+ * @param {*} win win对象
+ */
+async function downInOrder(urls, path, win) {
+  // 并发执行
+  const imgPromises = urls.map(async url => {
+    try {
+      const resp = await downloadImg(url, path);
+      return `图片 ${url} 下载完成`;
+    } catch (error) {
+      return `图片 ${url} 下载出错`;
+    }
+  })
+  // 按顺序输出
+  for (const imgPromise of imgPromises) {
+    win.send('logger', await imgPromise);
+  }
+  // win.send('logger', '主图下载完成');
 }
