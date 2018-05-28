@@ -165,6 +165,17 @@ function download(url, path, win) {
  * @param {*} win win对象
  */
 async function downInOrder(urls, path, win) {
+  // 非并发执行版本
+  // for(const url of urls) {
+  //   try {
+  //     await downloadImg(url, path)
+  //     win.send('logger', `图片 ${url} 下载完成`)
+  //   } catch (error) {
+  //     win.send('logger', `图片 ${url} 下载出错`)
+  //   }
+  // }
+
+  // ============= 推荐 ===================
   // 并发执行
   const imgPromises = urls.map(async url => {
     try {
