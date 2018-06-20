@@ -13,8 +13,8 @@
     <a class="navbar-brand" href="javascript:;">1688下载器</a>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
-        <a class="nav-item nav-link active" href="javascript:;">1688图片下载</span></a>
-        <a class="nav-item nav-link" href="wx.html">微信文章图片下载(beta)</a>
+        <a class="nav-item nav-link" href="index.html">1688图片下载</span></a>
+        <a class="nav-item nav-link active" href="javascript:;">微信文章图片下载(beta)</a>
       </div>
     </div>
   </nav>
@@ -69,7 +69,7 @@
   const btnClearLog = document.getElementById('btnClearLog');  // 清除日志
   const logger = document.getElementById('logger'); // 日志
   const errmsg = document.getElementById('errmsg');
-  const AliReg = 'https://detail.1688.com/';
+  const WxReg = 'https://mp.weixin.qq.com/';
   btnDownload.addEventListener('click', (e)=>{
     e.preventDefault();
     let srcLink = addrText.value;
@@ -78,8 +78,8 @@
       showErrorMsg('请输入要下载的地址！');
       return;
     }
-    if (!srcLink.startsWith(AliReg)) {
-      showErrorMsg('暂时只支持1688网站商品详情页的链接');
+    if (!srcLink.startsWith(WxReg)) {
+      showErrorMsg('请输入正确的微信文章链接');
       return;
     }
     if (!distText) {
@@ -91,7 +91,7 @@
     let params = {
       url:srcLink,
       dist: distText,
-      mode: 'ali'
+      mode: 'wx'
     }
     ipcRenderer.send('download', params);
   })
@@ -112,7 +112,7 @@
   btnClipboard.addEventListener('click',(e)=>{
     e.preventDefault();
     let url = clipboard.readText();
-    if(!url || !url.startsWith(AliReg)) {
+    if(!url || !url.startsWith(WxReg)) {
       return;
     }
     addrText.value = url;

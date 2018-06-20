@@ -15,9 +15,9 @@ const parse = require('./parse');
 function createWindow() {
   var opt = {
     width: 800,
-    height: 600,
+    height: 660,
     minWidth: 800,
-    minHeight: 600,
+    minHeight: 660,
     title: "1688图片下载器——By xinconan",
     // icon: path.join(__dirname, 'icons', 'icon.ico')
   };
@@ -83,7 +83,7 @@ ipcMain.on('download', (e, params)=>{
   // dist 下载的目录
   // url 下载的链接地址
   console.log(params)
-  parse.getImageList(params.url,params.dist,win.webContents);
+  parse.getImageList(params.url,params.dist,params.mode,win.webContents);
 })
 
 app.on('activate', () => {

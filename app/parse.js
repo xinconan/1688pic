@@ -1,13 +1,14 @@
 const request = require('request')
 const cheerio = require('cheerio')
 const {downloadImg} = require('./utils')
+const {UA} = require('./const')
 let retryCount = 0;
 
 let option = {
   maxRedirects: 15,
   jar:true, // 记住cookie
   headers: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36',
+    'User-Agent': UA,
   }
 }
 
@@ -76,13 +77,28 @@ function getDetailImages(url,win){
 }
 
 /**
+ * 获取链接并解析图片下载，支持1688详情页和微信文章图片
+ * @param {*} link 
+ * @param {*} path 
+ * @param {*} mode  ali 和 wx
+ * @param {*} win 
+ */
+exports.getImageList = function(link,path,mode,win){
+  if (mode === 'ali') {
+    downAli(link, path, win);
+  } else if (mode === 'wx') {
+    downWx(link, path, win)
+  }
+}
+
+/**
  * 解析获取图片链接，分两种页面
  * 一个是商品详情页(商品主图+内容图)，如：https://detail.1688.com/offer/563717771129.html
  * 另一个是商品详情页的主图页面，如：https://detail.1688.com/pic/563717771129.html
  * 其中如果传递的参数是商品详情页，那么也会下载主图页面里的图片
  * @param {*} link 
  */
-exports.getImageList = async function(link,path,win){
+async function downAli(link, path, win) {
   retryCount = 0;
   win.send('logger','正在请求目标网页');  
   getHtml(link,win).then((html)=>{
@@ -108,7 +124,7 @@ exports.getImageList = async function(link,path,win){
         win.send('logger','没有获取到详情图片链接')
         console.log('没有获取到详情图片链接')
       }
-
+  
       // 获取主图的链接地址
       const mainDom = $("li.tab-trigger");
       let mainImgs = [];
@@ -134,18 +150,42 @@ exports.getImageList = async function(link,path,win){
       downInOrder(mainImgs, path, win).then(()=>{
         win.send('logger', '主图下载完成');
       });
-      // 下载主图
-      // mainImgs.forEach((img)=>{
-      //   download(img, path, win);
-      //   });
-      // });
-
     }
         
   }).catch((err)=>{
     win.send('logger', `请求获取HTML出错，原因：${JSON.stringify(err)}`);
   })
+
 }
+
+/**
+ * 下载微信文章图片
+ * @param {*} link 
+ * @param {*} path 
+ * @param {*} win 
+ */
+function downWx(link,path, win) {
+  retryCount = 0;
+  win.send('logger','正在请求目标网页');  
+  getHtml(link,win).then(html => {
+    const $ = cheerio.load(html);
+    const imgs = $('#js_content img');
+    let imgList = [];
+    for(let i=0;i<imgs.length; i++) {
+      let src = $(imgs[i]).attr('data-src');
+      if (src) {
+        imgList.push(src)
+      }
+    }
+    win.send('logger', '开始下载微信图片');
+    downInOrder(imgList, path, win).then(()=>{
+      win.send('logger', '微信图片下载完成');
+    });
+  }).catch((err)=>{
+    win.send('logger', `请求获取HTML出错，原因：${JSON.stringify(err)}`);
+  })
+}
+
 
 function download(url, path, win) {
   win.send('logger', `开始下载图片 ${url}`)
@@ -182,7 +222,7 @@ async function downInOrder(urls, path, win) {
       const resp = await downloadImg(url, path);
       return `图片 ${url} 下载完成`;
     } catch (error) {
-      return `图片 ${url} 下载出错`;
+      return `图片 ${url} 下载出错，出错原因：${JSON.stringify(error)}`;
     }
   })
   // 按顺序输出
